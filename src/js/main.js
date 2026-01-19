@@ -46,7 +46,7 @@ const homeSectios = [
 ];
 
 // navigation
-window.addEventListener("popstate", () => {
+window.addEventListener("hashchange", () => {
   handleRouting();
 });
 document.addEventListener("DOMContentLoaded", () => {
@@ -54,25 +54,25 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 init();
 function handleRouting() {
-  //debugger;
-  const path = window.location.pathname;
-  if (path === "/home") {
+  debugger;
+  const hash = window.location.hash.slice(1) || "/home"; // Remove # and default to /home
+  if (hash === "/home") {
     toggleSectionVisibility("homeSection");
     return;
   }
-  if (path === "/") {
-    toggleSectionVisibility("homeSection", "/home");
+  if (hash === "/") {
+    toggleSectionVisibility("homeSection", "#/home");
     return;
   }
-  if (path === "/product-scanner") {
+  if (hash === "/product-scanner") {
     toggleSectionVisibility("products-section");
     return;
   }
-  if (path === "/food-log") {
+  if (hash === "/food-log") {
     toggleSectionVisibility("foodlog-section");
     return;
   }
-  if (path.startsWith("/meal/")) {
+  if (hash.startsWith("/meal/")) {
     const mealId = sessionStorage.getItem("selectedMealId");
 
     if (mealId) {
@@ -81,19 +81,22 @@ function handleRouting() {
       return;
     }
   }
-  toggleSectionVisibility("homeSection", "/home");
+  toggleSectionVisibility("homeSection", "#/home");
 }
-productLink.addEventListener("click", async () => {
-  toggleSectionVisibility("products-section", "/product-scanner");
+productLink.addEventListener("click", async (e) => {
+  e.preventDefault();
+  toggleSectionVisibility("products-section", "#/product-scanner");
   const productCategories = await getProductCategories();
   displayProductCategories(productCategories);
 });
-foodLogLink.addEventListener("click", () => {
-  toggleSectionVisibility("foodlog-section", "/food-log");
+foodLogLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  toggleSectionVisibility("foodlog-section", "#/food-log");
   loadFoodLogPage();
 });
-mainLink.addEventListener("click", () => {
-  toggleSectionVisibility("homeSection", "/home");
+mainLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  toggleSectionVisibility("homeSection", "#/home");
 });
 // Initialization functions
 async function init() {
@@ -745,11 +748,14 @@ function renderNutriationInfo(nutrition) {
 mealsContainer.addEventListener("click", async (event) => {
   const mealCard = event.target.closest(".recipe-card");
   const mealId = mealCard.dataset.mealId;
+  renderMealDetails(mealId);
+});
+async function renderMealDetails(mealId) {
   const mealDetails = await getMealDetails(mealId);
   sessionStorage.setItem("selectedMealId", mealId);
 
-  toggleSectionVisibility("meal-details", `/meal/${mealDetails.name.slug}`);
-  if (!mealCard) return;
+  toggleSectionVisibility("meal-details", `#/meal/${mealDetails.name.trim()}`);
+  if (!mealDetails) return;
   const nuritionData = await analyzeMealNutrition(mealDetails);
   console.log(nuritionData.perServing);
   console.log(nuritionData.totals);
@@ -761,8 +767,7 @@ mealsContainer.addEventListener("click", async (event) => {
   showVideoSection(mealDetails.youtube);
   selectedMeal = mealDetails;
   selectedNutrition = nuritionData;
-});
-
+}
 function toggleSectionVisibility(sectionId, url = null) {
   const allSections = document.getElementsByTagName("section");
   for (let i = 0; i < allSections.length; i++) {
@@ -779,7 +784,7 @@ function toggleSectionVisibility(sectionId, url = null) {
   }
 
   if (url) {
-    history.pushState({ sectionId }, "", url);
+    window.location.hash = url;
   }
 }
 function buildNutritionPayload(meal) {
