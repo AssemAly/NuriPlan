@@ -1,7 +1,7 @@
 import { API_URLS } from "./apiUrls.js";
-import { Meal } from "./models/meal.js";
-import { Category } from "./models/category.js";
-import { Area } from "./models/area.js";
+import { Meal } from "./models/Meal.js";
+import { Category } from "./models/Category.js";
+import { Area } from "./models/Area.js";
 import { Nutrition } from "./models/Nutrition.js";
 import { Product } from "./models/Product.js";
 import { ProductCategory } from "./models/ProductCategory.js";
