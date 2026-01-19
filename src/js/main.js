@@ -126,7 +126,7 @@ nutriScoreFilters.forEach((filterBtn) => {
       return;
     }
     const filteredProducts = allProducts.filter(
-      (product) => product.nutritionGrade.toLowerCase() === selectedGrade
+      (product) => product.nutritionGrade.toLowerCase() === selectedGrade,
     );
     displayProducts(filteredProducts);
   });
@@ -353,7 +353,7 @@ function displayProductCategories(categories) {
     .map(createProductCategoryOption)
     .join("");
   const producCategoriesElement = document.querySelectorAll(
-    ".product-category-btn"
+    ".product-category-btn",
   );
   producCategoriesElement.forEach((categoryBtn) => {
     categoryBtn.addEventListener("click", async () => {
@@ -492,7 +492,7 @@ areasContainer.addEventListener("click", async (event) => {
     btn.classList.remove(
       "bg-emerald-500",
       "text-white",
-      "hover:bg-emerald-700"
+      "hover:bg-emerald-700",
     );
     btn.classList.add("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
   });
@@ -621,7 +621,7 @@ function showVideoSection(videoUrl) {
 }
 function renderNutriationInfo(nutrition) {
   const nutritionContainer = document.getElementById(
-    "nutrition-facts-container"
+    "nutrition-facts-container",
   );
   nutritionContainer.innerHTML = "";
   nutritionContainer.innerHTML = ` 
@@ -797,18 +797,14 @@ function openLogMealModal() {
   logMealModal.classList.remove("hidden");
   document.getElementById("modal-meal-image").src = selectedMeal.thumbnail;
   document.getElementById("modal-meal-name").textContent = selectedMeal.name;
-  document.getElementById(
-    "modal-calories"
-  ).textContent = `${selectedNutrition.perServing.calories}`;
-  document.getElementById(
-    "modal-protein"
-  ).textContent = `${selectedNutrition.perServing.protein}`;
-  document.getElementById(
-    "modal-carbs"
-  ).textContent = `${selectedNutrition.perServing.carbs}`;
-  document.getElementById(
-    "modal-fat"
-  ).textContent = `${selectedNutrition.perServing.fat}`;
+  document.getElementById("modal-calories").textContent =
+    `${selectedNutrition.perServing.calories}`;
+  document.getElementById("modal-protein").textContent =
+    `${selectedNutrition.perServing.protein}`;
+  document.getElementById("modal-carbs").textContent =
+    `${selectedNutrition.perServing.carbs}`;
+  document.getElementById("modal-fat").textContent =
+    `${selectedNutrition.perServing.fat}`;
 }
 
 function closeLogMealModal() {
@@ -897,7 +893,7 @@ function renderFoodLogDate(date = new Date()) {
   const options = { weekday: "long", month: "short", day: "numeric" };
   document.getElementById("foodlog-date").textContent = date.toLocaleDateString(
     "en-US",
-    options
+    options,
   );
 }
 function renderTodaySummary(dayData) {
@@ -916,11 +912,8 @@ function renderTodaySummary(dayData) {
     const percent = Math.min((value / target) * 100, 100);
 
     const card = cards[index];
-    card.querySelector(
-      "span.text-gray-500"
-    ).textContent = `${value} / ${target} ${
-      item.key === "calories" ? "kcal" : "g"
-    }`;
+    card.querySelector("span.text-gray-500").textContent =
+      `${value} / ${target} ${item.key === "calories" ? "kcal" : "g"}`;
 
     card.querySelector(".rounded-full > div").style.width = `${percent}%`;
   });
@@ -1011,7 +1004,7 @@ function deleteLoggedItem(dateKey, index) {
 
 function calculateDaysOnGoal(foodLog) {
   return Object.values(foodLog).filter(
-    (d) => d.totalCalories >= 1800 && d.totalCalories <= 2200
+    (d) => d.totalCalories >= 1800 && d.totalCalories <= 2200,
   ).length;
 }
 function renderWeeklyStats(foodLog) {
@@ -1101,3 +1094,93 @@ function renderWeeklyOverview(foodLog) {
     `;
   });
 }
+
+// Products log modal
+document.getElementById("products-grid").addEventListener("click", (e) => {
+  const card = e.target.closest(".product-card");
+  if (!card) return;
+
+  const barcode = card.dataset.barcode;
+  const product = allProducts.find((p) => p.barcode === barcode);
+  if (!product) return;
+
+  openProductLogModal(product);
+});
+let selectedProductForLog = null;
+
+function openProductLogModal(product) {
+  selectedProductForLog = product;
+
+  document.getElementById("product-modal-image").src = product.image;
+  document.getElementById("product-modal-brand").textContent = product.brand;
+  document.getElementById("product-modal-name").textContent = product.name;
+
+  document.getElementById("product-modal-calories").textContent =
+    product.calories;
+  document.getElementById("product-modal-protein").textContent =
+    product.protein;
+  document.getElementById("product-modal-carbs").textContent = product.carbs;
+  document.getElementById("product-modal-fat").textContent = product.fat;
+  document.getElementById("product-modal-sugar").textContent = product.sugar;
+
+  document.getElementById("log-product-modal").classList.remove("hidden");
+}
+document.getElementById("confirm-log-product").addEventListener("click", () => {
+  if (!selectedProductForLog) return;
+
+  logProduct(selectedProductForLog);
+  closeProductModal();
+});
+function logProduct(product) {
+  const foodLog = getFoodLog();
+  const todayKey = getTodayKey();
+
+  if (!foodLog[todayKey]) {
+    foodLog[todayKey] = {
+      totalCalories: 0,
+      totalProtein: 0,
+      totalCarbs: 0,
+      totalFat: 0,
+      meals: [],
+    };
+  }
+
+  const entry = {
+    type: "product",
+    name: product.name,
+    brand: product.brand,
+    barcode: product.barcode,
+    serving: "100g",
+    thumbnail: product.image,
+    nutrition: {
+      calories: product.calories,
+      protein: product.protein,
+      carbs: product.carbs,
+      fat: product.fat,
+      sugar: product.sugar,
+    },
+    loggedAt: new Date().toISOString(),
+  };
+
+  foodLog[todayKey].meals.push(entry);
+
+  foodLog[todayKey].totalCalories += product.calories;
+  foodLog[todayKey].totalProtein += product.protein;
+  foodLog[todayKey].totalCarbs += product.carbs;
+  foodLog[todayKey].totalFat += product.fat;
+
+  localStorage.setItem("foodLog", JSON.stringify(foodLog));
+}
+function closeProductModal() {
+  document.getElementById("log-product-modal").classList.add("hidden");
+  selectedProductForLog = null;
+  alert("✅ Meal logged successfully");
+}
+
+document
+  .getElementById("cancel-log-product")
+  .addEventListener("click", closeProductModal);
+
+document
+  .getElementById("close-product-modal")
+  .addEventListener("click", closeProductModal);
