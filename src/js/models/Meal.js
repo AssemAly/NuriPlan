@@ -1,5 +1,5 @@
 import { Ingredient } from "./Ingredient.js";
-import { Area } from "./area.js";
+import { Area } from "./Area.js";
 
 export class Meal {
   constructor({
